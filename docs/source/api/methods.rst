@@ -84,6 +84,7 @@ input, either in pixel space or in a latent feature space.
    :template: myclass_template.rst
 
    MAE
+   CAPI
    BEiT
    CMAE
    MaskFeat
@@ -103,3 +104,16 @@ Other
    :template: myclass_template.rst
 
    NEPA
+
+CAPI usage
+----------
+
+CAPI :cite:`darcet2025capi` predicts position-wise balanced teacher clusters
+from visible student patches. Use ``spt.CAPI`` with ``spt.Manager`` and a
+single BCHW tensor under ``image``. See ``benchmarks/imagenet10/capi-vit-small.py`` for usage and
+``examples/capi_config.yaml`` for the full reference configuration.
+Embeddings average teacher patches, excluding registers; select the student
+with ``representation="student"``. Schedules count optimizer updates;
+``accumulation_steps`` does not enlarge the assignment-balancing batch.
+
+.. autoclass:: stable_pretraining.callbacks.CAPIEMA
