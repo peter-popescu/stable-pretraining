@@ -1279,7 +1279,7 @@ def capi(self, batch: dict[str, Any], stage: str) -> dict[str, torch.Tensor]:
     Note:
         Labels are passed through for callbacks and never used by the SSL loss.
         Clustering sees detached full-image teacher patches, balanced independently
-        at every position. Only the encoder is averaged by CAPIEMA.
+        at every position. CAPIEMA averages the student backbone, excluding heads.
     """
     from .backbone.capi import capi_mask
 

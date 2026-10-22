@@ -124,6 +124,44 @@ def test_gradient_isolation_and_dict_contract():
     assert "loss" not in model(batch, "fit")
 
 
+@pytest.mark.parametrize("grid", [(2, 16), (16, 2), (1, 16), (16, 1)])
+@pytest.mark.parametrize("mask_ratio", [0.25, 0.65, 0.95])
+def test_mask_on_narrow_grids(grid, mask_ratio):
+    torch.manual_seed(3)
+    positions = grid[0] * grid[1]
+    masked = int(positions * mask_ratio)
+    visible, predicted = capi_mask(
+        3, grid, torch.device("cpu"), mask_ratio, prediction_subsampling=1
+    )
+    assert visible.shape == (3 * (positions - masked),)
+    assert predicted.shape == (3 * masked,)
+    for batch_index in range(3):
+        assert (visible // positions == batch_index).sum() == positions - masked
+        assert (predicted // positions == batch_index).sum() == masked
+    torch.testing.assert_close(
+        torch.cat((visible, predicted)).sort().values, torch.arange(3 * positions)
+    )
+
+
+def test_example_dataset_config(tmp_path, monkeypatch):
+    from omegaconf import OmegaConf
+    from PIL import Image
+
+    image_dir = tmp_path / "class0"
+    image_dir.mkdir()
+    Image.new("RGB", (32, 48)).save(image_dir / "sample.png")
+    monkeypatch.setenv("CAPI_TRAIN_DIRECTORY", str(tmp_path))
+    config = OmegaConf.load(
+        Path(__file__).resolve().parents[3] / "examples/capi_config.yaml"
+    )
+    dataset = instantiate(config.data.train.dataset)
+    sample = dataset[0]
+    assert sample["image"].shape == (3, 224, 224)
+    assert sample["image"].dtype == torch.float32
+    assert torch.isfinite(sample["image"]).all()
+    assert sample["label"] == 0
+
+
 def test_labels_do_not_change_loss():
     model = tiny().train()
     images = torch.randn(3, 3, 32, 32)

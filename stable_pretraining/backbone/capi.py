@@ -537,6 +537,10 @@ def capi_mask(
     for b in range(batch_size):
         low = max(math.log(0.5), math.log(n_visible / width**2))
         high = min(math.log(2), math.log(height**2 / (n_visible + 1e-5)))
+        if low > high:
+            # Narrow grids may require aspect ratios outside the reference range.
+            low = math.log(n_visible / width**2)
+            high = math.log(height**2 / n_visible)
         aspect = math.exp(float(torch.empty(()).uniform_(low, high)))
         h = min(height, math.ceil(math.sqrt(n_visible * aspect)))
         w = min(width, math.ceil(math.sqrt(n_visible / aspect)))

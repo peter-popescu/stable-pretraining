@@ -110,10 +110,25 @@ CAPI usage
 
 CAPI :cite:`darcet2025capi` predicts position-wise balanced teacher clusters
 from visible student patches. Use ``spt.CAPI`` with ``spt.Manager`` and a
-single BCHW tensor under ``image``. See ``benchmarks/imagenet10/capi-vit-small.py`` for usage and
-``examples/capi_config.yaml`` for the full reference configuration.
+single BCHW tensor under ``image``. Image height and width must be divisible
+by the patch size, with enough patches to retain both visible and masked tokens.
+The method class installs its EMA callback automatically.
 Embeddings average teacher patches, excluding registers; select the student
 with ``representation="student"``. Schedules count optimizer updates;
 ``accumulation_steps`` does not enlarge the assignment-balancing batch.
+
+For an existing ImageFolder directory (one subdirectory per class), run from
+the repository root:
+
+.. code-block:: bash
+
+   CAPI_TRAIN_DIRECTORY=/path/to/images spt examples/capi_config.yaml
+
+The configuration supplies a single normalized 224-pixel crop per image;
+labels are available to evaluation callbacks but are not used by the SSL loss.
+Its architecture and schedules use author-scale defaults, which require
+substantial GPU memory. For a reduced-scale example and frozen-feature
+evaluation, see ``benchmarks/imagenet10/capi-vit-small.py``. That script runs
+inside a Slurm allocation and downloads Imagenette and CIFAR-10 if needed.
 
 .. autoclass:: stable_pretraining.callbacks.CAPIEMA

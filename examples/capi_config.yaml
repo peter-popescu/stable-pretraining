@@ -36,8 +36,22 @@ data:
   train:
     _target_: torch.utils.data.DataLoader
     dataset:
-      _target_: examples.capi.ImageDict
-      root: ${oc.env:CAPI_TRAIN_DIRECTORY}
+      _target_: stable_pretraining.data.FromTorchDataset
+      names: [image, label]
+      dataset:
+        _target_: torchvision.datasets.ImageFolder
+        root: ${oc.env:CAPI_TRAIN_DIRECTORY}
+        transform:
+          _target_: torchvision.transforms.Compose
+          transforms:
+            - _target_: torchvision.transforms.RandomResizedCrop
+              size: 224
+              scale: [0.6, 1.0]
+            - _target_: torchvision.transforms.RandomHorizontalFlip
+            - _target_: torchvision.transforms.ToTensor
+            - _target_: torchvision.transforms.Normalize
+              mean: [0.485, 0.456, 0.406]
+              std: [0.229, 0.224, 0.225]
     batch_size: 512
     shuffle: true
     drop_last: true
